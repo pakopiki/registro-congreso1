@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro Congreso</title>
+</head>
+<body>
+  <h1>Registro</h1>
+
+  <form id="regForm">
+    <input name="first_name" placeholder="Nombre(s)" required />
+    <input name="last_name" placeholder="Apellidos" required />
+    <input name="email" type="email" placeholder="Email" required />
+    <input name="company" placeholder="Empresa" />
+    <select name="role" required>
+      <option value="">Selecciona tipo</option>
+      <option>Participante</option>
+      <option>Expositor</option>
+      <option>VIP</option>
+    </select>
+    <button type="submit">Registrarme</button>
+  </form>
+
+  <p id="msg"></p>
+
+  <script>
+    const ENDPOINT = "Pega_aqui_tu_URL_de_Apps_Script";
+
+    document.getElementById("regForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const form = ev.target;
+      const payload = Object.fromEntries(new FormData(form).entries());
+
+      document.getElementById("msg").textContent = "Enviando...";
+
+      // Nota: Apps Script a veces complica CORS. Este patrón suele funcionar si el web app está público.
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById("msg").textContent =
+          "Registro exitoso. ID: " + data.attendee_id;
+        form.reset();
+      } else {
+        document.getElementById("msg").textContent =
+          "Error: " + (data.error || "desconocido");
+      }
+    });
+  </script>
+</body>
+</html>
