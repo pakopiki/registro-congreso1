@@ -2,54 +2,558 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro Congreso</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trifolium | Registro Congreso BRP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#07090d;
+      --bg1:#0b0f16;
+      --panel: rgba(16, 20, 30, .62);
+      --panel2: rgba(16, 20, 30, .35);
+      --text:#e8eefc;
+      --muted:#a9b3c9;
+      --line: rgba(255,255,255,.08);
+      --neon:#39ff88;
+      --neon2:#16d86b;
+      --warn:#ffcc66;
+      --err:#ff5a7a;
+      --ok:#39ff88;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(900px 600px at 70% 30%, rgba(57,255,136,.12), transparent 55%),
+                  radial-gradient(700px 500px at 20% 60%, rgba(22,216,107,.10), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* 3D canvas fills background */
+    #bg3d{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:auto; /* allow interaction */
+      opacity:.9;
+    }
+
+    /* subtle noise */
+    .noise{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.25;
+    }
+
+    .wrap{
+      position:relative;
+      z-index:2;
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:56px 18px;
+    }
+
+    .grid{
+      width:min(1080px, 100%);
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .hero{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel), rgba(10,14,22,.55));
+      box-shadow: var(--shadow);
+      padding:28px 26px;
+      backdrop-filter: blur(12px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(600px 240px at 20% 10%, rgba(57,255,136,.20), transparent 55%),
+                  radial-gradient(420px 220px at 80% 40%, rgba(22,216,107,.16), transparent 55%);
+      filter: blur(8px);
+      opacity:.7;
+      pointer-events:none;
+    }
+
+    .hero > *{ position:relative; }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .mark{
+      width:42px;height:42px;
+      border-radius: 14px;
+      background: radial-gradient(14px 14px at 35% 30%, rgba(255,255,255,.25), transparent 55%),
+                  linear-gradient(135deg, rgba(57,255,136,.90), rgba(22,216,107,.55));
+      box-shadow: 0 12px 35px rgba(57,255,136,.14);
+      border: 1px solid rgba(57,255,136,.35);
+    }
+    .brand h1{
+      font-size:14px;
+      margin:0;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(232,238,252,.85);
+    }
+
+    .title{
+      font-size: 38px;
+      line-height: 1.05;
+      margin:10px 0 12px;
+      letter-spacing:-.02em;
+    }
+    .title span{
+      color: var(--neon);
+      text-shadow: 0 0 26px rgba(57,255,136,.22);
+    }
+    .sub{
+      margin:0 0 16px;
+      color: var(--muted);
+      line-height:1.6;
+      max-width: 62ch;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+    }
+    .chip{
+      border: 1px solid rgba(57,255,136,.22);
+      background: rgba(10, 14, 22, .35);
+      color: rgba(232,238,252,.88);
+      padding:9px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing:.02em;
+    }
+    .chip b{ color: var(--neon); font-weight:700; }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(10,14,22,.58), rgba(10,14,22,.34));
+      box-shadow: var(--shadow);
+      padding:22px;
+      backdrop-filter: blur(12px);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:auto -40% -60% -40%;
+      height: 240px;
+      background: radial-gradient(closest-side, rgba(57,255,136,.16), transparent 70%);
+      transform: rotate(10deg);
+      pointer-events:none;
+    }
+
+    .card h2{
+      margin:0 0 12px;
+      font-size: 16px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: rgba(232,238,252,.85);
+    }
+
+    form{
+      display:grid;
+      gap:12px;
+      position:relative;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: rgba(232,238,252,.82);
+      margin: 0 0 6px;
+    }
+    .field{
+      background: rgba(5,7,12,.55);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 12px 12px;
+      color: var(--text);
+      outline:none;
+      width:100%;
+      transition: border .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+    .field:focus{
+      border-color: rgba(57,255,136,.45);
+      box-shadow: 0 0 0 4px rgba(57,255,136,.12);
+      transform: translateY(-1px);
+    }
+    select.field{
+      appearance:none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(232,238,252,.65) 50%),
+        linear-gradient(135deg, rgba(232,238,252,.65) 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) 55%,
+        calc(100% - 12px) 55%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat:no-repeat;
+      padding-right: 34px;
+    }
+
+    .btn{
+      border: 1px solid rgba(57,255,136,.55);
+      background: linear-gradient(135deg, rgba(57,255,136,.95), rgba(22,216,107,.72));
+      color: #041007;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      letter-spacing:.02em;
+      cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      box-shadow: 0 18px 42px rgba(57,255,136,.18);
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(0px); filter: brightness(.98); }
+
+    .footnote{
+      margin-top:10px;
+      font-size: 12px;
+      color: rgba(169,179,201,.92);
+      line-height:1.55;
+    }
+
+    .status{
+      margin-top: 10px;
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(5,7,12,.45);
+      display:none;
+    }
+    .status.show{ display:block; }
+    .status.ok{ border-color: rgba(57,255,136,.35); }
+    .status.err{ border-color: rgba(255,90,122,.35); }
+
+    /* Honeypot hidden field */
+    .hp{
+      position:absolute;
+      left:-9999px;
+      top:auto;
+      width:1px;
+      height:1px;
+      overflow:hidden;
+    }
+
+    .kicker{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(232,238,252,.75);
+      margin-bottom: 10px;
+    }
+
+    .hint{
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(10,14,22,.35);
+      color: rgba(232,238,252,.82);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .hint b{ color: var(--neon); }
+  </style>
 </head>
+
 <body>
-  <h1>Registro</h1>
+  <canvas id="bg3d"></canvas>
+  <div class="noise"></div>
 
-  <form id="regForm">
-    <input name="first_name" placeholder="Nombre(s)" required />
-    <input name="last_name" placeholder="Apellidos" required />
-    <input name="email" type="email" placeholder="Email" required />
-    <input name="company" placeholder="Empresa" />
-    <select name="role" required>
-      <option value="">Selecciona tipo</option>
-      <option>Participante</option>
-      <option>Expositor</option>
-      <option>VIP</option>
-    </select>
-    <button type="submit">Registrarme</button>
-  </form>
+  <div class="wrap">
+    <div class="grid">
+      <section class="hero">
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <h1>TRIFOLIUM</h1>
+        </div>
 
-  <p id="msg"></p>
+        <div class="kicker">Congreso BRP · Registro Oficial</div>
+        <h2 class="title">Acceso inteligente con <span>QR</span> y check-in en sitio</h2>
+        <p class="sub">
+          Completa tu registro para generar tu folio único. Posteriormente recibirás tu gafete digital por correo
+          (y podrás reimprimirlo en recepción).
+        </p>
+
+        <div class="chips">
+          <div class="chip"><b>VIP</b> · Acceso preferente</div>
+          <div class="chip"><b>Expositores</b> · Credencial técnica</div>
+          <div class="chip"><b>Participantes</b> · Entrada general</div>
+          <div class="chip">3 puntos de acceso</div>
+        </div>
+
+        <div class="hint">
+          Tip: puedes <b>interactuar</b> con el elemento 3D del fondo (arrastrar / mover el cursor).
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2>Registro</h2>
+
+        <form id="regForm" autocomplete="on" novalidate>
+          <!-- Honeypot: si esto viene lleno, es bot -->
+          <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" />
+
+          <div class="row">
+            <div>
+              <label>Nombre(s)</label>
+              <input class="field" name="first_name" placeholder="Ej. Francisco" required maxlength="60" />
+            </div>
+            <div>
+              <label>Apellidos</label>
+              <input class="field" name="last_name" placeholder="Ej. Moreno" required maxlength="80" />
+            </div>
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input class="field" name="email" type="email" placeholder="tu@correo.com" required maxlength="120" />
+          </div>
+
+          <div>
+            <label>Empresa / Institución</label>
+            <input class="field" name="company" placeholder="Ej. BRP" maxlength="120" />
+          </div>
+
+          <div>
+            <label>Tipo de invitado</label>
+            <select class="field" name="role" required>
+              <option value="">Selecciona una opción</option>
+              <option value="Participante">Participante</option>
+              <option value="Expositor">Expositor</option>
+              <option value="VIP">VIP</option>
+            </select>
+          </div>
+
+          <button class="btn" type="submit">Generar registro</button>
+
+          <div id="status" class="status"></div>
+
+          <div class="footnote">
+            Al registrarte aceptas el uso de tus datos únicamente para fines logísticos del evento (acceso, gafete y control de asistencia).
+          </div>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Three.js (gratis por CDN) -->
+  <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
 
   <script>
-    const ENDPOINT = "https://script.google.com/macros/s/AKfycbyNL6HceT081psQWE1F_Yj_nY9IC3V_G9vdEaj9giJADv4CcIKyu51iQDaymVvC11qG/exec";
+    // ====== CONFIG ======
+    const ENDPOINT = "https://script.google.com/macros/s/AKfycbykgCILphyR941dCchUT2uJ6q8JfdHo4uDCJd05tTndRtvKvgL7FDy-gpicOBfa5aUB/exec";
+    const ALLOWED_ROLES = new Set(["VIP", "Expositor", "Participante"]);
 
+    // ====== UI helpers ======
+    const statusEl = document.getElementById("status");
+    function setStatus(msg, kind){
+      statusEl.textContent = msg;
+      statusEl.className = "status show " + (kind || "");
+    }
+
+    // ====== FORM submit ======
     document.getElementById("regForm").addEventListener("submit", async (ev) => {
       ev.preventDefault();
+
       const form = ev.target;
-      const payload = Object.fromEntries(new FormData(form).entries());
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
 
-      document.getElementById("msg").textContent = "Enviando...";
-
-      // Nota: Apps Script a veces complica CORS. Este patrón suele funcionar si el web app está público.
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (data.ok) {
-        document.getElementById("msg").textContent =
-          "Registro exitoso. ID: " + data.attendee_id;
+      // Honeypot antibot
+      if ((payload.website || "").trim().length > 0) {
+        setStatus("Registro recibido.", "ok"); // no reveles que detectaste bot
         form.reset();
-      } else {
-        document.getElementById("msg").textContent =
-          "Error: " + (data.error || "desconocido");
+        return;
+      }
+
+      // Validación mínima frontend (backend también valida)
+      payload.first_name = (payload.first_name || "").trim();
+      payload.last_name  = (payload.last_name || "").trim();
+      payload.email      = (payload.email || "").trim().toLowerCase();
+      payload.company    = (payload.company || "").trim();
+      payload.role       = (payload.role || "").trim();
+
+      if (!payload.first_name || !payload.last_name || !payload.email || !payload.role) {
+        setStatus("Verifica: nombre, apellidos, email y tipo de invitado son obligatorios.", "err");
+        return;
+      }
+      if (!ALLOWED_ROLES.has(payload.role)) {
+        setStatus("Tipo de invitado inválido.", "err");
+        return;
+      }
+
+      setStatus("Enviando…", "");
+
+      try {
+        // Apps Script suele funcionar mejor sin headers CORS.
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          setStatus("Registro exitoso. Folio: " + data.attendee_id, "ok");
+          form.reset();
+        } else {
+          setStatus("No se pudo registrar: " + (data.error || "error desconocido"), "err");
+        }
+      } catch (err) {
+        setStatus("Error de red. Reintenta o verifica conexión.", "err");
       }
     });
+
+    // ====== 3D background (Three.js) ======
+    (function init3D(){
+      const canvas = document.getElementById("bg3d");
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+      camera.position.set(0, 0.4, 4.2);
+
+      // Lights
+      const key = new THREE.DirectionalLight(0xffffff, 0.9);
+      key.position.set(2.5, 3.2, 2.2);
+      scene.add(key);
+
+      const rim = new THREE.DirectionalLight(0xffffff, 0.35);
+      rim.position.set(-2.8, -1.8, 2.6);
+      scene.add(rim);
+
+      const ambient = new THREE.AmbientLight(0x99aaff, 0.18);
+      scene.add(ambient);
+
+      // Neon material
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x39ff88),
+        emissive: new THREE.Color(0x16d86b),
+        emissiveIntensity: 0.55,
+        roughness: 0.35,
+        metalness: 0.55,
+      });
+
+      const geom = new THREE.TorusKnotGeometry(1.05, 0.32, 220, 28);
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(1.8, 0.2, -0.8);
+      scene.add(mesh);
+
+      // Particles
+      const pCount = 900;
+      const pGeom = new THREE.BufferGeometry();
+      const pos = new Float32Array(pCount * 3);
+      for (let i=0;i<pCount;i++){
+        pos[i*3+0] = (Math.random()*2-1) * 7.5;
+        pos[i*3+1] = (Math.random()*2-1) * 4.5;
+        pos[i*3+2] = (Math.random()*2-1) * 6.5;
+      }
+      pGeom.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({ size: 0.018, transparent: true, opacity: 0.55 });
+      const points = new THREE.Points(pGeom, pMat);
+      scene.add(points);
+
+      let w=0,h=0;
+      function resize(){
+        w = window.innerWidth; h = window.innerHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      window.addEventListener("resize", resize, { passive:true });
+      resize();
+
+      // Interaction
+      let targetRotX = 0, targetRotY = 0;
+      let curRotX = 0, curRotY = 0;
+
+      window.addEventListener("mousemove", (e)=>{
+        const nx = (e.clientX / w) * 2 - 1;
+        const ny = (e.clientY / h) * 2 - 1;
+        targetRotY = nx * 0.55;
+        targetRotX = ny * 0.28;
+      }, { passive:true });
+
+      let isDown=false, lastX=0, lastY=0;
+      window.addEventListener("pointerdown", (e)=>{ isDown=true; lastX=e.clientX; lastY=e.clientY; }, { passive:true });
+      window.addEventListener("pointerup", ()=>{ isDown=false; }, { passive:true });
+      window.addEventListener("pointermove", (e)=>{
+        if(!isDown) return;
+        const dx = (e.clientX - lastX) / w;
+        const dy = (e.clientY - lastY) / h;
+        targetRotY += dx * 2.2;
+        targetRotX += dy * 1.2;
+        lastX = e.clientX; lastY = e.clientY;
+      }, { passive:true });
+
+      function tick(){
+        // smooth rotations
+        curRotX += (targetRotX - curRotX) * 0.06;
+        curRotY += (targetRotY - curRotY) * 0.06;
+
+        mesh.rotation.y = curRotY + performance.now() * 0.00018;
+        mesh.rotation.x = curRotX + performance.now() * 0.00010;
+
+        points.rotation.y = -curRotY * 0.35;
+        points.rotation.x = -curRotX * 0.35;
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
   </script>
 </body>
 </html>
