@@ -37,7 +37,6 @@
       // Nota: Apps Script a veces complica CORS. Este patrón suele funcionar si el web app está público.
       const res = await fetch(ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
