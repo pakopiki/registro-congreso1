@@ -110,7 +110,7 @@
         setResult("Error: " + e.message || e, "err");
       }
     });
-
+//cambios
     document.getElementById("stop").addEventListener("click", async ()=>{
       if(!qr || !running) return;
       await qr.stop();
