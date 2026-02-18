@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trifolium | Check-in QR</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:16px;background:#0b0f16;color:#e8eefc}
+    .wrap{max-width:720px;margin:0 auto}
+    .card{background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select,button{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:#e8eefc}
+    button{cursor:pointer;background:#39ff88;color:#041007;border:none;font-weight:700}
+    #result{margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1220}
+    .ok{border-color:rgba(57,255,136,.5)}
+    .err{border-color:rgba(255,90,122,.5)}
+    #reader{margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Check-in QR (iPhone)</h2>
+
+    <div class="card">
+      <div class="row">
+        <label>Acceso:</label>
+        <select id="gate">
+          <option value="GATE_1">Gate 1</option>
+          <option value="GATE_2">Gate 2</option>
+          <option value="GATE_3">Gate 3</option>
+        </select>
+        <button id="start">Iniciar cámara</button>
+        <button id="stop">Detener</button>
+      </div>
+
+      <div id="reader"></div>
+      <div id="result">Listo.</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+  <script>
+    const ENDPOINT = "https://script.google.com/macros/s/AKfycbwqc92hNMj5-mBumUunkaLKG3GzlBKRsN1Kyw9tq6RgLpTTWNRcO2Cxo8DQXXNCfvCk/exec"; // mismo /exec que registro
+    const resultEl = document.getElementById("result");
+    const gateEl = document.getElementById("gate");
+
+    function setResult(msg, kind){
+      resultEl.className = "";
+      if(kind) resultEl.classList.add(kind);
+      resultEl.textContent = msg;
+    }
+
+    let qr;
+    let running = false;
+    let lastId = null;
+    let lastTs = 0;
+
+    async function checkin(attendeeId){
+      // anti-doble scan (1.5s)
+      const now = Date.now();
+      if (attendeeId === lastId && (now-lastTs) < 1500) return;
+      lastId = attendeeId; lastTs = now;
+
+      setResult("Validando…", "");
+      const payload = { action:"checkin", attendee_id: attendeeId, gate: gateEl.value };
+
+      const res = await fetch(ENDPOINT, { method:"POST", body: JSON.stringify(payload) });
+      const data = await res.json();
+
+      if(!data.ok){
+        setResult("Error: " + (data.error || "desconocido"), "err");
+        return;
+      }
+
+      if(data.status === "NOT_FOUND"){
+        setResult("❌ No registrado: " + attendeeId, "err");
+        return;
+      }
+      if(data.status === "ALREADY_CHECKED_IN"){
+        setResult(`⚠️ Ya registrado\n${data.name || ""} (${data.role || ""})\nHora: ${data.checkin_time}\nAcceso: ${data.checkin_gate}`, "err");
+        return;
+      }
+      if(data.status === "CHECKED_IN"){
+        setResult(`✅ Check-in OK\n${data.name || ""} (${data.role || ""})\nHora: ${data.checkin_time}\nAcceso: ${data.checkin_gate}`, "ok");
+        return;
+      }
+
+      setResult("Respuesta desconocida.", "err");
+    }
+
+    document.getElementById("start").addEventListener("click", async ()=>{
+      if(running) return;
+      qr = new Html5Qrcode("reader");
+      running = true;
+
+      try{
+        await qr.start(
+          { facingMode: "environment" },
+          { fps: 12, qrbox: { width: 260, height: 260 } },
+          (decodedText) => { checkin(decodedText.trim()); }
+        );
+        setResult("Cámara activa. Escanea un QR.", "");
+      }catch(e){
+        running = false;
+        setResult("No se pudo iniciar cámara: " + e, "err");
+      }
+    });
+
+    document.getElementById("stop").addEventListener("click", async ()=>{
+      if(!qr || !running) return;
+      await qr.stop();
+      await qr.clear();
+      running = false;
+      setResult("Cámara detenida.", "");
+    });
+  </script>
+</body>
+</html>
