@@ -18,6 +18,7 @@
       margin-top:12px;
       width:100%;
       max-width:400px;
+      min-height: 320px;   /* <-- agrega esto */
     }
   </style>
 </head>
@@ -107,7 +108,7 @@ setResult("Cargó JS. Html5Qrcode=" + (typeof Html5Qrcode), "");
       }catch(e){
         running = false;
         console.error("Error detallado:", e); // Importante para debugging
-        setResult("Error: " + e.message || e, "err");
+        setResult("Error: " + (e && e.message ? e.message : String(e)), "err");
       }
     });
 //cambios
