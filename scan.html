@@ -91,7 +91,7 @@
 
       setResult("Respuesta desconocida.", "err");
     }
-
+setResult("Cargó JS. Html5Qrcode=" + (typeof Html5Qrcode), "");
     document.getElementById("start").addEventListener("click", async ()=>{
       if(running) return;
       qr = new Html5Qrcode("reader");
