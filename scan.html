@@ -14,7 +14,11 @@
     #result{margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1220}
     .ok{border-color:rgba(57,255,136,.5)}
     .err{border-color:rgba(255,90,122,.5)}
-    #reader{margin-top:12px}
+    #reader{
+      margin-top:12px;
+      width:100%;
+      max-width:400px;
+    }
   </style>
 </head>
 <body>
@@ -92,7 +96,7 @@
       if(running) return;
       qr = new Html5Qrcode("reader");
       running = true;
-
+    
       try{
         await qr.start(
           { facingMode: "environment" },
@@ -102,7 +106,8 @@
         setResult("Cámara activa. Escanea un QR.", "");
       }catch(e){
         running = false;
-        setResult("No se pudo iniciar cámara: " + e, "err");
+        console.error("Error detallado:", e); // Importante para debugging
+        setResult("Error: " + e.message || e, "err");
       }
     });
 
